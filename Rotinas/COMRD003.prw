@@ -52,23 +52,32 @@ EndIf
 cDiasA := SubStr(GetMv("MV__TIMESC"),1,2) //TIMEOUT Dias para Avisar Aprovador
 cDiasE := SubStr(GetMv("MV__TIMESC"),3,2) //TIMEOUT Dias para Excluir a Solicitacao
 
-Pergunte(cPerg,.T.) //Carrega Perguntas
+/*Não vi necessidade de chamar o pergunte. Os parametros não 
+influenciam no restante do processo. Também não há necessidade de chamar
+a função U_COMWF002, visto que, a rotina U_COMWF001 faz o envio e tratativos do 
+WorkFlow*/
+
+//Pergunte(cPerg,.T.) //Carrega Perguntas
 
 If ! Empty(cSuperior)
 	
 	RecLock("SC1",.F.)
 		C1_CODAPRO := cSuperior
 	MsUnlock()
+
+
+
+	U_COMWF001(cSuperior)
 	
 	
-	If mv_par04 == 1 				//Aprovacao por ITEM
+	/*If mv_par04 == 1 				//Aprovacao por ITEM
 		U_COMWF002()
 	ElseIf SC1->C1_ITEM == cTotItem //Aprovacao por SOLICITACAO
 		U_COMWF001(cSuperior)
 	EndIf
 
 	
-	/*U_COMWF002() //Envio dos Detalhes da Solicitacao
+	U_COMWF002() //Envio dos Detalhes da Solicitacao
 	
 	If SC1->C1_ITEM == cTotItem
 		U_COMWF001(cSuperior) //Envido do Resumo da Solicitacao

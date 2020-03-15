@@ -60,7 +60,7 @@ If nRec > 0
 	PutMv("MV_WFHTML","T")
 	
 	oProcess:=TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
-	oProcess:NewTask('Inicio',"\workflow\koala\COMWF002.htm")
+	oProcess:NewTask('Inicio',"\workflow\koala\COMWF001.htm")
 	oHtml   := oProcess:oHtml
 	
 	//***********************
@@ -490,7 +490,7 @@ If nRec > 0
 	//	Inicia o processo de enviar link no corpo do e-mail
 	//*********************************************************
 	
-	oProcess:newtask('000005', '\workflow\koala\COMWFLINK002.HTM')  //Inicio uma nova Task com um HTML Simples
+	oProcess:newtask('000005', '\workflow\koala\COMWFLINK001.HTM')  //Inicio uma nova Task com um HTML Simples
   	oProcess:ohtml:valbyname('proc_link',cHostWF+'/workflow/messenger/'+'/emp'+ cEmpAnt + '/koala/' + cMailId + '.HTM' ) //Defino o Link onde foi gravado o HTML pelo Workflow,abaixo do diretório do usuário definido em cTo do processo acima.
 		                                                                                        
   	oHtml:ValByName("cNumSc"			, cNumSc)
@@ -506,11 +506,11 @@ If nRec > 0
     oProcess:= Nil
     
 //Grava campo C1_WFENVIO
-DbSelectArea("SC1")
-	RecLock("SC1", .T.)		
+/*DbSelectArea("SC1")
+	RecLock("SC1", .F.)		
 		SC1->C1_WFENVIO := .T.
 	MsUnLock() // Confirma e finaliza a operação
-SC1->(DbCloseArea())
+SC1->(DbCloseArea())*/
 	
 Else
 	MsgStop("Foi encontrado um problema na Geração do E-Mail de Aprovação. Favor avisar o Depto de Informática. NREC =","ATENÇÃO!")
