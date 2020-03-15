@@ -50,7 +50,7 @@ If nRec > 0
 	//*****************************************************
 	PutMv("MV_WFHTML","T")
 	
-	oProcess:=TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
+	oProcess := TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
 	oProcess:NewTask('Inicio',"\workflow\koala\COMWF001.htm")
 	oHtml   := oProcess:oHtml
 	
@@ -91,7 +91,7 @@ If nRec > 0
 	oProcess:cTo    	:= "koala"
 	oProcess:cSubject  	:= "E-mail para aprovação de SC - "+cNumSc+" - De: "+cSolicit
 	oProcess:bReturn  	:= "U_COMWF01a()"
-	oProcess:bTimeOut := {{"U_COMWF01b()", Val(cDiasA) , 0, 0 },{"U_COMWF01c()", Val(cDiasE) , 0, 0 }}
+	oProcess:bTimeOut 	:= {{"U_COMWF01b()", Val(cDiasA) , 0, 0 },{"U_COMWF01c()", Val(cDiasE) , 0, 0 }}
 	
 	cMailID := oProcess:Start()
 	
@@ -109,7 +109,7 @@ If nRec > 0
 
   	oHtml:ValByName("cNumSc"			, cNumSc)
 	oHtml:ValByName("cSolicitante"		, cSolicit)
-	oHtml:ValByName("cDtEmissao"		, dDtEmissao)  
+	oHtml:ValByName("dDtEmissao"		, dDtEmissao)  
   
 	oProcess:cTo    	:= cMailSup //E-mail do aprovador
 	oProcess:cBCC     	:= "igor-d-silva@hotmail.com" //Cópia

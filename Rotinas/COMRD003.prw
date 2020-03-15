@@ -26,10 +26,7 @@ Local cTotItem := Strzero(Len(aCols),4)
 
 Private cDiasA
 Private cDiasE
-Private cPerg  := Padr("COMRD3",10)
-
-//GRAVA O NOME DA FUNCAO NA Z03
-//U_CFGRD001(FunName())
+//Private cPerg  := Padr("COMRD3",10)
 
 //***********************************************
 //	Verifica a Existencia de Parametro MV__TIMESC
