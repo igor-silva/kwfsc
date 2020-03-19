@@ -44,7 +44,7 @@ oHtml:valbyname("it.Cod"  	, {})
 oHtml:valbyname("it.Desc"   , {})
 
 cQuery := " SELECT C1_ITEM, C1_PRODUTO, C1_DESCRI, C1_CODAPRO"
-cQuery += " FROM SC1010"
+cQuery += " FROM " + RetSqlName("SC1")
 cQuery += " WHERE C1_NUM = '"+cNumSc+"'"
 
 MemoWrit("COMWF01b.sql",cQuery)

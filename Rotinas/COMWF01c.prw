@@ -22,6 +22,16 @@ Local cCodSol	:= RetCodUsr(cSolicit)
 Local cMailSol 	:= UsrRetMail(cCodSol)
 Local aCab := {}
 Local aItem:= {}
+//Variáveis para controlar o TXT
+Local aLogAuto := {}
+Local cLogTxt  := ""
+Local cArquivo := "C:\temp\LogMata110.txt"
+Local nAux     := 0
+ 
+//Variáveis de controle do ExecAuto
+Private lMSHelpAuto     := .T.
+Private lAutoErrNoFile  := .T.
+Private lMsErroAuto     := .F.
 Private oHtml
 
 ConOut("EXCLUSAO POR TIMEOUT SC:"+cNumSc+" Solicitante:"+cSolicit)
@@ -30,7 +40,7 @@ cQuery := " SELECT C1_ITEM, C1_PRODUTO, C1_DESCRI, C1_CODAPRO"
 cQuery += " FROM " + RetSqlName("SC1")
 cQuery += " WHERE C1_NUM = '"+cNumSc+"'"
 
-MemoWrit("COMWF01b.sql",cQuery)
+MemoWrit("COMWF01c.sql",cQuery)
 dbUseArea(.T.,"TOPCONN", TCGenQry(,,cQuery),"TRB", .F., .T.)
 
 COUNT TO nRec
@@ -53,6 +63,24 @@ If nRec > 0
 		
 		dbSkip()
 	End
+
+	//*************************************
+	//	Tratamento de Log MsExecAuto
+	//*************************************
+
+	//Se houve erro
+	If lMsErroAuto
+		//Pegando log do ExecAuto
+		aLogAuto := GetAutoGRLog()
+	
+		//Percorrendo o Log e incrementando o texto (para usar o CRLF você deve usar a include "Protheus.ch")
+		For nAux := 1 To Len(aLogAuto)
+			cLogTxt += aLogAuto[nAux] + CRLF
+		Next
+	
+		//Criando o arquivo txt
+		MemoWrite(cArquivo, cLogTxt)
+	EndIf
 	
 	
 	

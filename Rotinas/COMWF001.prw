@@ -91,8 +91,18 @@ If nRec > 0
 	oProcess:cTo    	:= "koala"
 	oProcess:cSubject  	:= "E-mail para aprovação de SC - "+cNumSc+" - De: "+cSolicit
 	oProcess:bReturn  	:= "U_COMWF01a()"
-	oProcess:bTimeOut 	:= {{"U_COMWF01b()", Val(cDiasA) , 0, 0 },{"U_COMWF01c()", Val(cDiasE) , 0, 0 }}
 	
+	//**********************************************************************//
+	// Função a ser executada quando expirar o tempo do TimeOut.			//
+	// Tempos limite de espera das respostas, em dias, horas e minutos.		//
+	//**********************************************************************//
+
+	//oProcess:bTimeOut := {{"U_COMWF01b()", Val(cDiasA) , 0, 0 },{"U_COMWF01c()", Val(cDiasE) , 0, 0 }}
+	
+
+	oProcess:bTimeOut := {{"U_COMWF01b()", 0 , 0, 3 },{"U_COMWF01c()", 0 , 0, 6 }}
+	
+
 	cMailID := oProcess:Start()
 	
 	
