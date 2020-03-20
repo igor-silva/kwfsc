@@ -35,11 +35,45 @@ Local nAux     := 0
 Private lMSHelpAuto     := .T.
 Private lAutoErrNoFile  := .T.
 Private lMsErroAuto     := .F.
+
 Private oHtml
 
-If Select("SX2") == 0
-	RpcSetEnv( "99","01", "admin", " ", "COM", "MATA110", aTables, , , ,  )
+ConOut("++++++++++   Inicio isBlind ++++++++")
+
+If isBlind()
+
+	ConOut("++++++++++   Validou  isBlind ++++++++")
+
+	RpcSetEnv( "99","01", "admin", "", "COM", "MATA110", aTables, , , ,  )
+
+	ConOut("++++++++++   Depois do  RpcSetEnv  ++++++++")
 EndIf
+
+ConOut("++++++++++   Depois do  isBlind  ++++++++")
+
+
+
+/*If Select("SX6") == 0
+	xEmp := "99"
+	xFil := "01"
+	RPCSetType(3)
+	RpcSetEnv (xEmp,xFil,,,,,aTables)
+Endif*/
+
+
+//aParam recebe a empresa/filial que será executado a função.
+/*Default aParam     :=     {"99","01"} 
+
+If aParam <> Nil
+	RpcClearEnv()
+    RPCSetType(3)
+    If FindFunction("WFPREPENV")
+      WfPrepENV(aParam[1],aParam[2])
+    Else
+          RpcSetEnv (xEmp,xFil,,,,,aTables)
+     EndIf
+EndIf*/
+
 
 cMvAtt 	:= SuperGetMV("MV_WFHTML",.F.,"")
 cNumSc	:= oProcess:oHtml:RetByName("cNUM")
@@ -65,6 +99,9 @@ If nRec > 0
 	//*************************************
 	//	Inicia MsExecAuto da Exclusao
 	//*************************************
+	
+	ConOut("++++++++++   Inicio If nRec > 0 ++++++++")
+	
 	dbSelectArea("TRB")
 	dbGoTop()
 	cMailSup := UsrRetMail(TRB->C1_CODAPRO)
@@ -74,7 +111,9 @@ If nRec > 0
 		Aadd(aItem, {	{"C1_ITEM",TRB->C1_ITEM,NIL}})
 		
 		Begin Transaction
-		MSExecAuto({|x,y,z| mata110(x,y,z)},aCab,aItem,5) //Exclusao
+			ConOut("++++++++++   Inicio MSExecAuto ++++++++")
+			MSExecAuto({|x,y,z| mata110(x,y,z)},aCab,aItem,5) //Exclusao
+			ConOut("++++++++++   Fim MSExecAuto ++++++++")
 		End Transaction
 		
 		dbSkip()
@@ -132,6 +171,7 @@ If nRec > 0
 	End
 	
 EndIf
+ConOut("++++++++++   Inicio If nRec > 0 ++++++++")
 TRB->(dbCloseArea())
 
 //*************************************

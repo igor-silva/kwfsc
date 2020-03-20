@@ -9,7 +9,14 @@
 			"cwb": "${workspaceFolder}",
 			"smartclientBin": "D:\\TOTVS 12\\Microsiga\\Protheus\\bin\\smartclient\\SmartClient.exe",
 			"isMultiSession": true,
-			"enableTableSync": true
+			"enableTableSync": true,
+			"programArguments": "undefined",
+			"enableMultiThread": true,
+			"enableProfile": false,
+			"isAccessibilityMode": false,
+			"doNotShowSplash": false,
+			"language": "",
+			"ignoreFiles": true
 		}
 	],
 	"lastPrograms": [
@@ -17,7 +24,12 @@
 			"args": [],
 			"label": "SIGACOM",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_COMWF01c",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGACOM"
+	"lastProgramExecuted": "U_COMWF01c"
 }
