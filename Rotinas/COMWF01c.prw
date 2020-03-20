@@ -12,16 +12,19 @@
 /*/
 User Function COMWF01c(oProcess)
 
-Local cMvAtt 	:= GetMv("MV_WFHTML")
-Local cNumSc	:= oProcess:oHtml:RetByName("cNUM")
-Local cSolicit	:= oProcess:oHtml:RetByName("cSOLICIT")
-Local cEmissao	:= oProcess:oHtml:RetByName("cEMISSAO")
-Local cDiasA	:= oProcess:oHtml:RetByName("diasA")
-Local cDiasE	:= oProcess:oHtml:RetByName("diasE")
-Local cCodSol	:= RetCodUsr(cSolicit)
-Local cMailSol 	:= UsrRetMail(cCodSol)
+Local cMvAtt
+Local cNumSc
+Local cSolicit
+Local cEmissao
+Local cDiasA
+Local cDiasE
+Local cCodSol
+Local cMailSol
 Local aCab := {}
 Local aItem:= {}
+
+Local aTables := {"SC1"}
+
 //Variáveis para controlar o TXT
 Local aLogAuto := {}
 Local cLogTxt  := ""
@@ -33,6 +36,19 @@ Private lMSHelpAuto     := .T.
 Private lAutoErrNoFile  := .T.
 Private lMsErroAuto     := .F.
 Private oHtml
+
+If Select("SX2") == 0
+	RpcSetEnv( "99","01", "admin", " ", "COM", "MATA110", aTables, , , ,  )
+EndIf
+
+cMvAtt 	:= SuperGetMV("MV_WFHTML",.F.,"")
+cNumSc	:= oProcess:oHtml:RetByName("cNUM")
+cSolicit	:= oProcess:oHtml:RetByName("cSOLICIT")
+cEmissao	:= oProcess:oHtml:RetByName("cEMISSAO")
+cDiasA	:= oProcess:oHtml:RetByName("diasA")
+cDiasE	:= oProcess:oHtml:RetByName("diasE")
+cCodSol	:= RetCodUsr(cSolicit)
+cMailSol 	:= UsrRetMail(cCodSol)
 
 ConOut("EXCLUSAO POR TIMEOUT SC:"+cNumSc+" Solicitante:"+cSolicit)
 
@@ -91,7 +107,7 @@ If nRec > 0
 	//*************************************
 	//	Inicia Envio de Mensagem de Aviso
 	//*************************************
-	PutMv("MV_WFHTML","T")
+	//PutMv("MV_WFHTML","T")
 	
 	oProcess:=TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
 	oProcess:NewTask('Inicio',"\workflow\koala\COMWF004.htm")
@@ -140,5 +156,7 @@ oProcess:= Nil
 PutMv("MV_WFHTML",cMvAtt)
 
 WFSendMail({"01","01"})
+
+RpcClearEnv() //Limpa o ambiente, liberando a licença e fechando as conexões
 
 Return
