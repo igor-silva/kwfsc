@@ -29,7 +29,12 @@
 			"args": [],
 			"label": "U_COMWF01c",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_CopiaFile",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "U_COMWF01c"
+	"lastProgramExecuted": "U_CopiaFile"
 }
