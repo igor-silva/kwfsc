@@ -38,51 +38,29 @@ Private lMsErroAuto     := .F.
 
 Private oHtml
 
-ConOut("++++++++++   Inicio isBlind ++++++++")
-
-If isBlind()
-
-	ConOut("++++++++++   Validou  isBlind ++++++++")
-
-	RpcSetEnv( "99","01", "admin", "", "COM", "MATA110", aTables, , , ,  )
-
-	ConOut("++++++++++   Depois do  RpcSetEnv  ++++++++")
-EndIf
-
-ConOut("++++++++++   Depois do  isBlind  ++++++++")
 
 
 
-/*If Select("SX6") == 0
+
+If Select("SX6") == 0
 	xEmp := "99"
 	xFil := "01"
 	RPCSetType(3)
-	RpcSetEnv (xEmp,xFil,,,,,aTables)
-Endif*/
+	//RpcSetEnv (xEmp,xFil,"Administrador",,,,aTables)
+	RpcSetEnv( xEmp,xFil, "admin", "", "COM", "MATA110", aTables, , , ,  )
+	//RpcSetEnv( "99","01", "admin", " ", "COM", "MATA110", aTables)
+Endif
 
-
-//aParam recebe a empresa/filial que será executado a função.
-/*Default aParam     :=     {"99","01"} 
-
-If aParam <> Nil
-	RpcClearEnv()
-    RPCSetType(3)
-    If FindFunction("WFPREPENV")
-      WfPrepENV(aParam[1],aParam[2])
-    Else
-          RpcSetEnv (xEmp,xFil,,,,,aTables)
-     EndIf
-EndIf*/
 
 
 cMvAtt 	:= SuperGetMV("MV_WFHTML",.F.,"")
-cNumSc	:= oProcess:oHtml:RetByName("cNUM")
-cSolicit	:= oProcess:oHtml:RetByName("cSOLICIT")
-cEmissao	:= oProcess:oHtml:RetByName("cEMISSAO")
-cDiasA	:= oProcess:oHtml:RetByName("diasA")
-cDiasE	:= oProcess:oHtml:RetByName("diasE")
+cNumSc	:= "000149"
+cSolicit:= "user3"
+cEmissao:= "21/03/2020"
+cDiasA	:= "03"
+cDiasE	:= "05"
 cCodSol	:= RetCodUsr(cSolicit)
-cMailSol 	:= UsrRetMail(cCodSol)
+cMailSol:= UsrRetMail(cCodSol)
 
 ConOut("EXCLUSAO POR TIMEOUT SC:"+cNumSc+" Solicitante:"+cSolicit)
 
@@ -137,65 +115,15 @@ If nRec > 0
 		MemoWrite(cArquivo, cLogTxt)
 	EndIf
 	
-	
-	
-	oProcess:Finish()
-	oProcess:Free()
-	oProcess:= Nil
-	
-	//*************************************
-	//	Inicia Envio de Mensagem de Aviso
-	//*************************************
-	//PutMv("MV_WFHTML","T")
-	
-	oProcess:=TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
-	oProcess:NewTask('Inicio',"\workflow\koala\COMWF004.htm")
-	oHtml   := oProcess:oHtml
-	
-	oHtml:valbyname("Num"		, cNumSc)
-	oHtml:valbyname("Req"    	, cSolicit)
-	oHtml:valbyname("Emissao"   , cEmissao)
-	oHtml:valbyname("diasE"		, cDiasE)
-	oHtml:valbyname("it.Item"   , {})
-	oHtml:valbyname("it.Cod"  	, {})
-	oHtml:valbyname("it.Desc"   , {})
-	
 	dbSelectArea("TRB")
 	dbGoTop()
-	
-	While !EOF()
-		aadd(oHtml:ValByName("it.Item")		, TRB->C1_ITEM)
-		aadd(oHtml:ValByName("it.Cod")		, TRB->C1_PRODUTO)
-		aadd(oHtml:ValByName("it.Desc")		, TRB->C1_DESCRI)
-		dbSkip()
-	End
+
 	
 EndIf
 ConOut("++++++++++   Inicio If nRec > 0 ++++++++")
 TRB->(dbCloseArea())
 
-//*************************************
-//	Funcoes para Envio do Workflow
-//*************************************
-
-//envia o e-mail
-cUser 			  := Subs(cUsuario,7,15)
-oProcess:ClientName(cUser)
-oProcess:cTo	  := cMailSup+";"+cMailSol
-oProcess:cBCC     := "igor-d-silva@hotmail.com"
-oProcess:cSubject := "Exclusão por TimeOut - SC N°: "+cNumSc+" - De: "+cSolicit
-oProcess:cBody    := ""
-oProcess:bReturn  := ""
-oProcess:Start()
-//RastreiaWF( ID do Processo, Codigo do Processo, Codigo do Status, Descricao Especifica, Usuario )
-RastreiaWF(oProcess:fProcessID+'.'+oProcess:fTaskID,"000004",'1004',"TIMEOUT EXCLUSAO DE WORKFLOW PARA APROVACAO DE SC",cUsername)
-oProcess:Free()
-oProcess:Finish()
-oProcess:= Nil
-
 PutMv("MV_WFHTML",cMvAtt)
-
-WFSendMail({"01","01"})
 
 RpcClearEnv() //Limpa o ambiente, liberando a licença e fechando as conexões
 
