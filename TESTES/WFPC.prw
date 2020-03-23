@@ -101,7 +101,7 @@ User Function WFPCSend(cNumPC)
 				// existir varias tarefas. Para cada tarefa, 
 				// deve-se informar um nome e o HTML envolvido
 				// ---------------------------------------------------------
-				oProcess:NewTask('WFA010', '\WORKFLOW\WFA010.HTM')
+				oProcess:NewTask('WFA010', '\WORKFLOW\WFA010.HTML')
 	
 				// ---------------------------------------------------------
 				// Determinacao da funcao que realiza o processamento
