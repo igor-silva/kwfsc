@@ -355,51 +355,33 @@ Static Function KSKWFE03(aAprov,nRegSCR,cMensProg,cOpc,aMensIncon)
     //Link
     //oProcess:oProcess:lHtmlBody := .T.
 
-   If !"@" $ oProcess:cTO
-     _cTo := cEMailApv  //UsrRetMail(oProcess:cTO)
-     cProcess := oProcess:Start()
-     Conout(cProcess)
-        
-     aMsg := {}
-     aaDD(aMsg, "Sr.(a) " + cAprov )
-     AADD(aMsg, " Enviamos o email com o link abaixo para a sua aprovacao. ")
-     AADD(aMsg, " Referente a analise do Pedido Compra No. " + cNumPed )
-     AADD(aMsg, " Conforme solicitação aprovação do usuário "+ UsrFullName(__CUSERID))
-     AADD(aMsg, " ")
-     AADD(aMsg, " ")
-     AADD(aMsg, "Atenciosamente ")
-     AADD(aMsg, " ")
-     AADD(aMsg, "Workflow Totvs")
-     AADD(aMsg, " ")
+  If !"@" $ oProcess:cTO
+    _cTo := cEMailApv  //UsrRetMail(oProcess:cTO)
+    cProcess := oProcess:Start()
+    cSoli := UsrFullName(__CUSERID)
+    Conout(cProcess)
 
-    //	aAdd(aMsg, '<p><a href="' +GetNewPar("MV_WFHTTP",cServerWf)+'/messenger/emp' +cEmpAnt  + '/' + cAprovWF + '/' + alltrim(cProcess) + '.htm">clique aqui</a></p>')
-    //     U_CONSOLE(_cTo)
 
-      //cCopyWF := '/messenger/emp' +cEmpAnt  + '/' + cAprovWF + '/' + alltrim(cProcess)+ '.htm' //temporario pois esta copiando no mensager e não no workflow
-      
-      cCopyWF := '/messenger/emp' +cEmpAnt  + '/' + "compras" + '/' + alltrim(cProcess)+ '.htm' //temporario pois esta copiando no mensager e não no workflow
-     
-      If !File(cCopyWF)
-        cCopyWF := '/workflow/emp' +cEmpAnt  + '/temp/' + alltrim(cProcess)+ '.htm' //temporariopois esta copiando no mensager e não no workflow
-      Endif
+    oProcess:newtask('100200', '\workflow\compras\WF_LINK.htm')  //Inicio uma nova Task com um HTML Simples
+    oProcess:oHtml:valbyname('proc_link',GetNewPar("MV_WFHTTP",cServerWf)+'/wf/workflow/messenger/'+'/emp'+ cEmpAnt + '/compras/' + alltrim(cProcess) + '.HTM' ) //Defino o Link onde foi gravado o HTML pelo Workflow,abaixo do diretório do usuário definido em cTo do processo acima.
 
-      cDirDest := 'D:\TOTVS 12\Microsiga\protheus_data\workflow\compras\http\' + alltrim(cProcess) + '.htm'
 
-      If File(cCopyWF)
-        __CopyFile(cCopyWF, cDirDest) // Realiza a copia do arquivo
-      Endif
-
-  //     cCopyWF := '/messenger/emp' +cEmpAnt  + '/' + cAprovWF + '/' + alltrim(cProcess)+ '.htm' //temporariopois esta copiando no mensager e não no workflow
-  //   	 __CopyFile(cCopyWF, '/workflow/http'+ '/' + alltrim(cProcess) + '.htm') // Realiza a copia do arquivo
-	//oProcess:ohtml:valbyname('proc_link',cHostWF+'/workflow/messenger/'+'/emp'+ cEmpAnt + '/koala/' + cMailId + '.HTM' ) //Defino o Link onde foi gravado o HTML pelo Workflow,abaixo do diretório do usuário definido em cTo do processo acima.
-
-     aAdd(aMsg, '<p><a href="' +GetNewPar("MV_WFHTTP",cServerWf)+'/wf/workflow/compras/http/'+ cEmpAnt +  alltrim(cProcess) + '.htm">clique aqui</a></p>')
-
-     U_Notifica( _cTo, oProcess:cSubject , aMsg )
+  	 oProcess:oHtml:ValByName("cAprov"	, cAprov)
+	   oProcess:oHtml:ValByName("cNumPed"	, cNumPed)
+	   oProcess:oHtml:ValByName("cSoli"		, cSoli)
+  
+	  oProcess:cTo    	:= _cTo //E-mail do aprovador
+	  oProcess:cBCC     := "igor-d-silva@hotmail.com" //Cópia
+	  oProcess:cSubject := oProcess:cSubject
+    
    Endif
 
-   //oProcess:Start()
-   oProcess:Free()  
+    oProcess:Start()
+    oProcess:Free()
+    oProcess:= Nil
+
+  
+    
    RecLock("SCR",.f.)
    SCR->CR_IDWF := cWFID
    SCR->(MsUnLock()) 
