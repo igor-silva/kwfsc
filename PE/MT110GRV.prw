@@ -61,7 +61,9 @@ Local cRet := .T.
 //쿐nvia Workflow para aprovacao da Solicitacao de Compras �
 //읕컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴켸
 If INCLUI .OR. ALTERA //Verifica se e Inclusao ou Alteracao da Solicitacao
-	MsgRun("Enviando Workflow para Aprovador da Solicita豫o, Aguarde...","",{|| CursorWait(), U_COMRD003() ,CursorArrow()})
+	//MsgRun("Enviando Workflow para Aprovador da Solicita豫o, Aguarde...","",{|| CursorWait(), U_COMRD003() ,CursorArrow()})
+	MsgRun("Enviando Workflow para Aprovador da Solicita豫o, Aguarde...","",{|| CursorWait(), U_WFSC() ,CursorArrow()})
+
 EndIf
 
 

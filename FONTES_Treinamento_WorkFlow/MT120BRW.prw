@@ -17,5 +17,5 @@
 */
 
 User Function MT120BRW()
-aAdd(aRotina,{"Envio Aprovação","U_KSKWF003()", 0, 4, 0, .F. }) 
+aAdd(aRotina,{"Envio Aprovação","U_WFPC()", 0, 4, 0, .F. }) 
 Return Nil
