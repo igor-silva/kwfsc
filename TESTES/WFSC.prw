@@ -27,7 +27,22 @@ User Function WFSC()
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     For nNivel := 1 to Len(aNivel)
 
-        U_Exec094(cNumPC,"SC",aNivel[nNivel])
+		If aNivel[nNivel] == "00"
+			cUser 	:= "000000"
+			cAprov 	:= "000001"
+			cStatus := "02"
+		else
+			cUser 	:= "000002"
+			cAprov 	:= "000002"
+			cStatus := "01"
+		EndIf
+
+			cGrupo 	:= "000002"
+			dEmissao:= DTOC(DATE())
+			cTotal 	:= SC1->C1_TOTAL
+
+		U_Exec094(cNumPC,"SC",cUser,cAprov,cGrupo,aNivel[nNivel],cStatus,dEmissao,cTotal)
+
 
     Next nNivel
 	
