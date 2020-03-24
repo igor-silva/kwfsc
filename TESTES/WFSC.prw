@@ -176,7 +176,7 @@ User Function WFSCSend(cNumPC)
 				// Tratamento da rastreabilidade do workflow
 				// 1o. passo: Envio do e-mail:
 				// ---------------------------------------------------------
-				RastreiaWF(oProcess:fProcessID + '.' + oProcess:fTaskID, oProcess:fProcCode,'10001')  
+				//RastreiaWF(oProcess:fProcessID + '.' + oProcess:fTaskID, oProcess:fProcCode,'10001')  
 	
 				// ---------------------------------------------------------
 				// Reposiciona o SC1 para gravacao do processo de 
@@ -411,7 +411,7 @@ User Function WFSCRet(oProcess)
 								// Tratamento da rastreabilidade do workflow
 								// 2o. passo: Processamento do retorno do workflow
 								// ---------------------------------------------------------
-								RastreiaWF(oProcess:fProcessID + '.' + oProcess:fTaskID, oProcess:fProcCode, '10002')  
+								//RastreiaWF(oProcess:fProcessID + '.' + oProcess:fTaskID, oProcess:fProcCode, '10002')  
 	
 							EndIf
 						EndIf
