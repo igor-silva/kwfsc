@@ -21,10 +21,9 @@ User Function WFSC()
 	Local aNivel    := {"00","01"}
     Local nNivel    := 0
 
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-    //Rotina Automática Liberação de Documentos MVC (MATA094)           //
-    //https://tdn.totvs.com/pages/releaseview.action?pageId=543090187   //
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    //++++++++++++++++++++++++++++++++++//
+    //	Simula rotina (MATA094)         //
+    //++++++++++++++++++++++++++++++++++//
     For nNivel := 1 to Len(aNivel)
 
 		If aNivel[nNivel] == "00"
@@ -147,18 +146,9 @@ User Function WFSCSend(cNumPC)
 				SC1->(DbSetOrder(1))
 				SC1->(DbSeek(xFilial('SC1')+cNumPC))
 	
-				SA2->(DbSetOrder(1))
-				SA2->(DbSeek(xFilial('SA2')+SC1->(C1_FORNECE+C1_LOJA)))
-	
-				SE4->(DbSetOrder(1))
-				SE4->(DbSeek(xFilial('SE4')+SC1->C1_CONDPAG))
-	
 				oProcess:oHtml:ValByName('cNumPed'		, SC1->C1_NUM)
 				oProcess:oHtml:ValByName('dEmissao'		, SC1->C1_EMISSAO)
-				oProcess:oHtml:ValByName('cCodFor'		, SC1->(C1_FORNECE + '/' + C1_LOJA))
-				oProcess:oHtml:ValByName('cNomFor' 		, SA2->A2_NOME)
 				oProcess:oHtml:ValByName('cCodAprov'	, SCR->CR_USER)
-				oProcess:oHtml:ValByName('cCondPagto'	, '(' + SC1->C1_CONDPAG + ') ' + SE4->E4_DESCRI)
 		
 				While !SC1->(Eof()) .And.; 
 						SC1->(C1_FILIAL+C1_NUM) == xFilial('SC1')+cNumPC
@@ -168,8 +158,6 @@ User Function WFSCSend(cNumPC)
 					AAdd(oProcess:oHtml:ValByName('PED.cDesPro')	, SC1->C1_DESCRI)
 					AAdd(oProcess:oHtml:ValByName('PED.cUnidMed')	, SC1->C1_UM)
 					AAdd(oProcess:oHtml:ValByName('PED.nQtde')		, Transform(SC1->C1_QUANT, PesqPict('SC1', 'C1_QUANT')))
-					AAdd(oProcess:oHtml:ValByName('PED.nValUnit')	, cSimbMoed + Transform(SC1->C1_PRECO, PesqPict('SC1', 'C1_PRECO')))
-					AAdd(oProcess:oHtml:ValByName('PED.nValTot')	, cSimbMoed + Transform(SC1->C1_TOTAL, PesqPict('SC1', 'C1_TOTAL')))
 					AAdd(oProcess:oHtml:ValByName('PED.dDtEntr')	, SC1->C1_DATPRF)
 			
 					SC1->(DbSkip())
@@ -248,8 +236,8 @@ User Function WFSCSend(cNumPC)
 				// ---------------------------------------------------------
 				// Libera Objeto
 				// ---------------------------------------------------------
-				oProcess :Free()
-				oProcess := NIL
+				oProcess:Free()
+				oProcess:= NIL
 			EndIf
 		Next nCount
 	Endif  
@@ -335,7 +323,7 @@ User Function WFSCRet(oProcess)
 		// Avalia o Status do Documento a ser liberado
 		// -----------------------------------------------
 		If lContinua .And. !Empty(SCR->CR_DATALIB) .And. SCR->CR_STATUS$'03|05'
-			Conout('Este pedido ja foi liberado anteriormente. Somente os pedidos que estao aguardando liberacao poderao ser liberados.')
+			Conout('Esta solicitacao ja foi liberada anteriormente. Somente as solicitacoes que estao aguardando liberacao poderao ser liberadas.')
 			lContinua := .F.
 	
 		ElseIf lContinua .And. SCR->CR_STATUS$'01'
@@ -362,14 +350,14 @@ User Function WFSCRet(oProcess)
 			// ---------------------------------------------------------
 			// Analisa o Saldo do Aprovador
 			// ---------------------------------------------------------
-			If lContinua .And. SAL->AL_LIBAPR == 'A'
+			/*If lContinua .And. SAL->AL_LIBAPR == 'A'
 				aRetSaldo  := MaSalAlc(cCodAprov,dDataBase)
 				nTotal     := xMoeda(SCR->CR_TOTAL,SCR->CR_MOEDA,aRetSaldo[2],SCR->CR_EMISSAO,,SCR->CR_TXMOEDA)
 				If (aRetSaldo[1] - nTotal) < 0
-					Conout('Saldo na data insuficiente para efetuar a liberacao do pedido. Verifique o saldo disponivel para aprovacao na data e o valor total do pedido.')
+					Conout('Saldo na data insuficiente para efetuar a liberacao da solicitação de compra. Verifique o saldo disponivel para aprovacao na data e o valor total da solicitação.')
 					lContinua := .F.
 				EndIf
-			EndIf
+			EndIf*/
 		
 			If lContinua
 				Begin Transaction
