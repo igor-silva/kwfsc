@@ -18,13 +18,18 @@ User Function WFSC()
 	Local nOpc      := 3
 	Local cNumPC    := SC1->C1_NUM
 	Local lOk       := .T.
-	
+	Local aNivel    := {"00","01"}
+    Local nNivel    := 0
 
-	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
     //Rotina Automática Liberação de Documentos MVC (MATA094)           //
     //https://tdn.totvs.com/pages/releaseview.action?pageId=543090187   //
     //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-    U_Exec094(cNumPC,"SC")
+    For nNivel := 1 to Len(aNivel)
+
+        U_Exec094(cNumPC,"SC",aNivel[nNivel])
+
+    Next nNivel
 	
 	If nOpc == 3 .And. lOk 
 		MsgRun('Montando processo de Workflow...', 'Aguarde...', {|| U_WFSCSend(cNumPC)})

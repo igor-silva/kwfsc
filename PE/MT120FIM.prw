@@ -19,12 +19,6 @@ User Function MT120FIM()
     Local nOpc      := PARAMIXB[1]
 	Local cNumPC    := PARAMIXB[2]
 	Local lOk       := PARAMIXB[3] == 1
-
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-    //Rotina Automática Liberação de Documentos MVC (MATA094)           //
-    //https://tdn.totvs.com/pages/releaseview.action?pageId=543090187   //
-    //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
-    U_Exec094(cNumPC,"SC")
 	
 	
 	If nOpc == 3 .And. lOk 

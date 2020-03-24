@@ -3,24 +3,34 @@
 #INCLUDE 'PROTHEUS.CH'
 #INCLUDE 'FWMVCDEF.CH'
  
-User Function Exec094(cNumDoc,cTipoDoc)
+User Function Exec094(cNumDoc,cTipoDoc,cNivelAp)
  
     Local oModel094 := Nil      //-- Objeto que receberá o modelo da MATA094
-    Local cNum      := cNumDoc     //-- Recebe o número do documento a ser avaliado
-    Local cTipo     := cTipoDoc    //-- Recebe o tipo do documento a ser avaliado
-    Local cAprov    := ""   //-- Recebe o código do aprovador do documento
+    Local cNum      := cNumDoc  //-- Recebe o número do documento a ser avaliado
+    Local cTipo     := cTipoDoc //-- Recebe o tipo do documento a ser avaliado
+    Local cAprov    := ""       //-- Recebe o código do aprovador do documento
+    Local cNivel    := cNivelAp     //-- Recebe o nível do aprovador do documento
     Local nLenSCR   := 0        //-- Controle de tamanho de campo do documento
     Local lOk       := .T.      //-- Controle de validação e commit
     Local aErro     := {}       //-- Recebe msg de erro de processamento
+    Local aTables   := {"SCR"}
  
     //-- Inicializa o ambiente
-    PREPARE ENVIRONMENT EMPRESA "99" FILIAL "01" USER "Administrador" PASSWORD "" MODULO "COM"
+    //PREPARE ENVIRONMENT EMPRESA "99" FILIAL "01" USER "Administrador" PASSWORD "" MODULO "COM"
      
+    If Select("SX6") == 0
+        xEmp := "99"
+        xFil := "01"
+        RPCSetType(3)
+        RpcSetEnv( xEmp,xFil, "admin", "", "COM", "MATA094", aTables, , , ,  )
+    Endif
+
+
     nLenSCR := TamSX3("CR_NUM")[1] //-- Obtem tamanho do campo CR_NUM
     DbSelectArea("SCR")
-    SCR->(DbSetOrder(3)) //-- CR_FILIAL+CR_TIPO+CR_NUM+CR_APROV
+    SCR->(DbSetOrder(1)) //-- CR_FILIAL+CR_TIPO+CR_NUM+CR_NIVEL
  
-    If SCR->(DbSeek(xFilial("SCR") + cTipo + Padr(cNum, nLenSCR) + cAprov))
+    If SCR->(DbSeek(xFilial("SCR") + cTipo + Padr(cNum, nLenSCR) + cNivel))
  
         //-- Códigos de operações possíveis:
         //--    "001" // Liberado
@@ -75,6 +85,7 @@ User Function Exec094(cNumDoc,cTipoDoc)
     EndIf
      
     //-- Finaliza o ambiente
-    RESET ENVIRONMENT
+    //RESET ENVIRONMENT
+    RpcClearEnv()
  
 Return Nil
