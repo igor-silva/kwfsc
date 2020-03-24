@@ -38,7 +38,7 @@ User Function WFSC()
 		EndIf
 
 			cGrupo 	:= "000002"
-			dEmissao:= DTOC(DATE())
+			dEmissao:= DATE()
 			cTotal 	:= SC1->C1_TOTAL
 
 		U_Exec094(cNumPC,"SC",cUser,cAprov,cGrupo,aNivel[nNivel],cStatus,dEmissao,cTotal)
@@ -151,14 +151,14 @@ User Function WFSCSend(cNumPC)
 				SA2->(DbSeek(xFilial('SA2')+SC1->(C1_FORNECE+C1_LOJA)))
 	
 				SE4->(DbSetOrder(1))
-				SE4->(DbSeek(xFilial('SE4')+SC1->C1_COND))
+				SE4->(DbSeek(xFilial('SE4')+SC1->C1_CONDPAG))
 	
 				oProcess:oHtml:ValByName('cNumPed'		, SC1->C1_NUM)
 				oProcess:oHtml:ValByName('dEmissao'		, SC1->C1_EMISSAO)
 				oProcess:oHtml:ValByName('cCodFor'		, SC1->(C1_FORNECE + '/' + C1_LOJA))
 				oProcess:oHtml:ValByName('cNomFor' 		, SA2->A2_NOME)
 				oProcess:oHtml:ValByName('cCodAprov'	, SCR->CR_USER)
-				oProcess:oHtml:ValByName('cCondPagto'	, '(' + SC1->C1_COND + ') ' + SE4->E4_DESCRI)
+				oProcess:oHtml:ValByName('cCondPagto'	, '(' + SC1->C1_CONDPAG + ') ' + SE4->E4_DESCRI)
 		
 				While !SC1->(Eof()) .And.; 
 						SC1->(C1_FILIAL+C1_NUM) == xFilial('SC1')+cNumPC
