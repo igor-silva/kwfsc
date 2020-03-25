@@ -119,7 +119,7 @@ User Function WFSCSend(cNumPC)
 				// Criacao do objeto TWFProcess, responsavel 
 				// pela inicializacao do processo de Workflow
 				// ---------------------------------------------------------
-				oProcess := TWFProcess():New('APR_PC', 'Criacao do Processo - Aprovacao de Solicitações')
+				oProcess := TWFProcess():New('APR_SC', 'Criacao do Processo - Aprovacao de Solicitações')
 	
 				// ---------------------------------------------------------
 				// Criacao de uma tarefa de workflow. Podem 
