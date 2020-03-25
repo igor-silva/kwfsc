@@ -319,20 +319,7 @@ User Function WFPCRet(oProcess)
 		EndIf
 	
 		If lContinua
-			// ---------------------------------------------------------
-			// Inicializa a gravacao dos lancamentos do SIGAPCO
-			// ---------------------------------------------------------
-			PcoIniLan("000055")
 		
-			// ---------------------------------------------------------
-			// Avalia liberacao do DOcumento pelo PCO
-			// ---------------------------------------------------------
-			If !ValidPcoLan()
-				Conout('Bloqueio de Liberacao pelo PCO.')
-				lContinua := .F.
-	
-			EndIf
-	
 			// ---------------------------------------------------------
 			// Analisa o Saldo do Aprovador
 			// ---------------------------------------------------------
@@ -360,22 +347,13 @@ User Function WFPCRet(oProcess)
 	
 					If lContinua
 						If lLiberou //-- Verifica se todos os niveis ja foram aprovados
-							// ---------------------------------------------------------
-							// Grava os lancamentos nas contas orcamentarias SIGAPCO
-							// ---------------------------------------------------------
-							PcoDetLan("000055","02","MATA097")
-	
+							
 							While SC7->(!Eof()) .And.; 
 									SC7->C7_FILIAL+SC7->C7_NUM == xFilial("SC7")+PadR(SCR->CR_NUM,Len(SC7->C7_NUM))
 	
 								Reclock("SC7",.F.)
 								SC7->C7_CONAPRO := "L" //-- Atualiza o status (Liberado) no Pedido de Compra
 								SC7->(MsUnlock())
-	
-								// ---------------------------------------------------------
-								// Grava os lancamentos nas contas orcamentarias SIGAPCO
-								// ---------------------------------------------------------
-								PcoDetLan("000055","01","MATA097")
 								SC7->( dbSkip() )
 							End
 	
@@ -416,43 +394,6 @@ User Function WFPCRet(oProcess)
 	RestArea(aAreaSC7)
 	RestArea(aAreaSCR)
 Return
-
-/*/
-‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±…ÕÕÕÕÕÕÕÕÕÕ—ÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕª±±
-±±∫Programa  ≥ ValidPcoLan                                                ∫±±
-±±ÃÕÕÕÕÕÕÕÕÕÕÿÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕπ±±
-±±∫DescriáÑo ≥ Valida o lancamento no PCO.                                ∫±±
-±±»ÕÕÕÕÕÕÕÕÕÕœÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕÕº±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂﬂ
-/*/
-Static Function ValidPcoLan()
-	Local lRet	   := .T.
-	Local aArea    := GetArea()
-	Local aAreaSC7 := SC7->(GetArea())
-	
-	DbSelectArea("SC7") 
-	DbSetOrder(1)
-	DbSeek(xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM)))
-	
-	If lRet	:=	PcoVldLan('000055','02','MATA097')
-		While lRet .And. !Eof() .And. SC7->C7_FILIAL+Substr(SC7->C7_NUM,1,len(SC7->C7_NUM)) == xFilial("SC7")+Substr(SCR->CR_NUM,1,len(SC7->C7_NUM))
-			lRet	:=	PcoVldLan("000055","01","MATA097")    
-			dbSelectArea("SC7") 
-			dbSkip()
-		EndDo
-	Endif
-	
-	If !lRet
-		PcoFreeBlq("000055")
-	Endif
-	
-	RestArea(aAreaSC7)
-	RestArea(aArea)
-Return lRet
-
 
 /*/
 ‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹

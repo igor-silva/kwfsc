@@ -24,5 +24,7 @@ User Function MT120FIM()
 	If nOpc == 3 .And. lOk 
 		MsgRun('Montando processo de Workflow...', 'Aguarde...', {|| U_WFPCSend(cNumPC)})
 	EndIf
+
+    //U_WFPCSend(SC7->C7_NUM)
 	
 Return 
