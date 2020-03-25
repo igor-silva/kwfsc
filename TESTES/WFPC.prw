@@ -122,14 +122,14 @@ User Function WFPCSend(cNumPC)
 				SC7->(DbSeek(xFilial('SC7')+cNumPC))
 	
 				SA2->(DbSetOrder(1))
-				SA2->(DbSeek(xFilial('SA2')+SC7->(C7_FORNECE+C7_LOJA)))
+				SA2->(DbSeek(xFilial('SA2')+SC7->C7_FORNECE+SC7->C7_LOJA))
 	
 				SE4->(DbSetOrder(1))
 				SE4->(DbSeek(xFilial('SE4')+SC7->C7_COND))
 	
 				oProcess:oHtml:ValByName('cNumPed'		, SC7->C7_NUM)
 				oProcess:oHtml:ValByName('dEmissao'		, SC7->C7_EMISSAO)
-				oProcess:oHtml:ValByName('cCodFor'		, SC7->(C7_FORNECE + '/' + C7_LOJA))
+				oProcess:oHtml:ValByName('cCodFor'		, SC7->C7_FORNECE + '/' + SC7->C7_LOJA)
 				oProcess:oHtml:ValByName('cNomFor' 		, SA2->A2_NOME)
 				oProcess:oHtml:ValByName('cCodAprov'	, SCR->CR_USER)
 				oProcess:oHtml:ValByName('cCondPagto'	, '(' + SC7->C7_COND + ') ' + SE4->E4_DESCRI)
@@ -168,16 +168,16 @@ User Function WFPCSend(cNumPC)
 				// Reposiciona o SC7 para gravacao do processo de 
 				// workflow no pedido de compras:
 				// ---------------------------------------------------------
-				SC7->(DbSeek(xFilial('SC7')+cNumPC))
+				/*SC7->(DbSeek(xFilial('SC7')+cNumPC))
 				While !SC7->(Eof()) .And.; 
-						SC7->(C7_FILIAL+C7_NUM) == xFilial('SC7')+cNumPC
+						SC7->C7_FILIAL+SC7->C7_NUM == xFilial('SC7')+cNumPC
 		
 					RecLock('SC7', .F.)
 					SC7->C7_WFID := oProcess:fProcessID
 					SC7->(MsUnLock())
 	
 					SC7->(DbSkip())
-				End
+				End*/
 	
 				// ---------------------------------------------------------
 				// Inicia o processo de workflow e 
