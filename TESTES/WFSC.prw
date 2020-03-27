@@ -64,7 +64,6 @@ Return()
 /*/
 User Function WFSCSend(cNumPC)
 	Local oProcess  := NIL
-	Local cSimbMoed := SuperGetMV('MV_SIMB' + Alltrim(Str(SC1->C1_MOEDA)), .F., 'R$') + ' '
 	Local cMailId   := ''
 	Local cUrl      := ''
 	Local cHTTPSrv  := ''

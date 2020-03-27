@@ -6,6 +6,7 @@
 User Function Exec094(cNumDoc,cTipoDoc,cUser,cAprovDoc,cGrupo,cNivelAp,cStatus,dEmissao,cTotal)
  
     Local oModel094 := Nil      	//-- Objeto que receberá o modelo da MATA094
+    Local oSCR094   := Nil      	//-- Objeto que receberá o getModel
     Local cNum      := cNumDoc 		//-- Recebe o número do documento a ser avaliado
     Local cTipo     := cTipoDoc 	//-- Recebe o tipo do documento a ser avaliado
     Local cAprov    := cAprovDoc 	//-- Recebe o código do aprovador do documento
@@ -24,17 +25,17 @@ User Function Exec094(cNumDoc,cTipoDoc,cUser,cAprovDoc,cGrupo,cNivelAp,cStatus,d
 		
 				
 		//Pegando o model dos campos da SCR
-		oModel094:= oModel:getModel("MATA094_SCR")
+		//oSCR094:= oModel094:getModel("MATA094_SCR")
 		oModel094:setValue("CR_FILIAL",	xFilial("SCR")	) // Codigo 
-		oModel094:setValue("CR_NUM",	cNumDoc       	) // Num. Documento            
-		oModel094:setValue("CR_TIPO",	cTipoDoc		) // Tipo Documento 
-		oModel094:setValue("CR_USER",	cUser   		) // Usuário
+		oModel094:setValue("CR_NUM",    cNum       	    ) // Num. Documento            
+		oModel094:setValue("CR_TIPO",   cTipo		    ) // Tipo Documento 
+		oModel094:setValue("CR_USER",   cUser   		) // Usuário
 		oModel094:setValue("CR_APROV",	cAprov     		) // Aprovador
 		oModel094:setValue("CR_GRUPO",	cGrupo         	) // Grupo de aprovação 
 		oModel094:setValue("CR_NIVEL",	cNivelAp     	) // Nível do aprovador               
 		oModel094:setValue("CR_STATUS",	cStatus    		) // Status da aprovação
 		oModel094:setValue("CR_EMISSAO",dEmissao        ) // Data de emissão do docuemnto
-		oModel094:setValue("CR_TOTAL",	cTotal         	) // Total do documento
+		oModel094:setValue("CR_TOTAL",  cTotal         	) // Total do documento
  
         //-- Valida o formulário
         lOk := oModel094:VldData()
