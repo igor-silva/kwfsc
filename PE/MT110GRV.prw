@@ -52,10 +52,7 @@
 User Function MT110GRV()
 
 Local aArea     := GetArea()
-Local cRet := .T.
-
-//GRAVA O NOME DA FUNCAO NA Z03
-//U_CFGRD001(FunName())
+Local lRet := .T.
 
 //旼컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴커
 //쿐nvia Workflow para aprovacao da Solicitacao de Compras �
@@ -71,7 +68,7 @@ DbSelectArea("SC1")
 //Grava campo C1_SPORTAL
 If SC1->C1_SPORTAL == .F. .And. SC1->C1_WFENVIO == .F. 
 	RecLock("SC1", .F.)		
-		SC1->C1_SPORTAL := .T. 
+		SC1->C1_SPORTAL := .F. 
 		SC1->C1_WFENVIO := .T.
 	MsUnLock() // Confirma e finaliza a opera豫o
 SC1->(DbCloseArea())
@@ -81,4 +78,4 @@ EndIf
 
 RestArea(aArea)
 
-Return cRet
+Return lRet
