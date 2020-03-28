@@ -14,7 +14,7 @@ User Function Exec094(cNumDoc,cTipoDoc,cUser,cAprovDoc,cGrupo,cNivelAp,cStatus,d
     Local lOk       := .T.      	//-- Controle de validação e commit
     Local aErro     := {}       	//-- Recebe msg de erro de processamento
      
-    nLenSCR := TamSX3("CR_NUM")[1] //-- Obtem tamanho do campo CR_NUM
+    /*nLenSCR := TamSX3("CR_NUM")[1] //-- Obtem tamanho do campo CR_NUM
  
     If !Empty(cNum)
  
@@ -26,16 +26,16 @@ User Function Exec094(cNumDoc,cTipoDoc,cUser,cAprovDoc,cGrupo,cNivelAp,cStatus,d
 				
 		//Pegando o model dos campos da SCR
 		//oSCR094:= oModel094:getModel("MATA094_SCR")
-		oModel094:setValue("CR_FILIAL",	xFilial("SCR")	) // Codigo 
-		oModel094:setValue("CR_NUM",    cNum       	    ) // Num. Documento            
-		oModel094:setValue("CR_TIPO",   cTipo		    ) // Tipo Documento 
-		oModel094:setValue("CR_USER",   cUser   		) // Usuário
-		oModel094:setValue("CR_APROV",	cAprov     		) // Aprovador
-		oModel094:setValue("CR_GRUPO",	cGrupo         	) // Grupo de aprovação 
-		oModel094:setValue("CR_NIVEL",	cNivelAp     	) // Nível do aprovador               
-		oModel094:setValue("CR_STATUS",	cStatus    		) // Status da aprovação
-		oModel094:setValue("CR_EMISSAO",dEmissao        ) // Data de emissão do docuemnto
-		oModel094:setValue("CR_TOTAL",  cTotal         	) // Total do documento
+		oModel094:setValue("MdFieldSRC","CR_FILIAL",	xFilial("SCR")	) // Codigo 
+		oModel094:setValue("MdFieldSRC","CR_NUM",       cNum       	    ) // Num. Documento            
+		oModel094:setValue("MdFieldSRC","CR_TIPO",      cTipo		    ) // Tipo Documento 
+		oModel094:setValue("MdFieldSRC","CR_USER",      cUser   		) // Usuário
+		oModel094:setValue("MdFieldSRC","CR_APROV",	    cAprov     		) // Aprovador
+		oModel094:setValue("MdFieldSRC","CR_GRUPO",	    cGrupo         	) // Grupo de aprovação 
+		oModel094:setValue("MdFieldSRC","CR_NIVEL",	    cNivelAp     	) // Nível do aprovador               
+		oModel094:setValue("MdFieldSRC","CR_STATUS",    cStatus    		) // Status da aprovação
+		oModel094:setValue("MdFieldSRC","CR_EMISSAO",   dEmissao        ) // Data de emissão do docuemnto
+		oModel094:setValue("MdFieldSRC","CR_TOTAL",     cTotal         	) // Total do documento
  
         //-- Valida o formulário
         lOk := oModel094:VldData()
@@ -70,15 +70,15 @@ User Function Exec094(cNumDoc,cTipoDoc,cUser,cAprovDoc,cGrupo,cNivelAp,cStatus,d
  
     Else
         MsgInfo("Documento não encontrado!", "Exec094")
-    EndIf
+    EndIf*/
 
-/*DbSelectArea("SCR")
+DbSelectArea("SCR")
 //Grava campo SRC
-If !Empty(cNumDoc) 
+If !Empty(cNum) 
 	RecLock("SCR", .T.)
         SCR->CR_FILIAL  := xFilial("SCR") 
-		SCR->CR_NUM     := cNumDoc 
-		SCR->CR_TIPO    := cTipoDoc
+		SCR->CR_NUM     := cNum 
+		SCR->CR_TIPO    := cTipo
         SCR->CR_USER    := cUser
         SCR->CR_APROV   := cAprov
         SCR->CR_GRUPO   := cGrupo
@@ -88,6 +88,6 @@ If !Empty(cNumDoc)
         SCR->CR_TOTAL   := cTotal
 	MsUnLock() // Confirma e finaliza a operação
 SCR->(DbCloseArea())
-EndIf*/
+EndIf
  
 Return Nil

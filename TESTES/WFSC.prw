@@ -121,7 +121,7 @@ User Function WFSCSend(cNumPC)
 				// existir varias tarefas. Para cada tarefa, 
 				// deve-se informar um nome e o HTML envolvido
 				// ---------------------------------------------------------
-				oProcess:NewTask('WFA030', '\WORKFLOW\PROCESSOS_COMPRAS\WFA030.HTML')
+				oProcess:NewTask('WFA030', '\WORKFLOW\PROCESSOS_COMPRA\WFA030.HTML')
 	
 				// ---------------------------------------------------------
 				// Determinacao da funcao que realiza o processamento
@@ -164,7 +164,7 @@ User Function WFSCSend(cNumPC)
 				// que seja acessado posteriormente via link 
 				// enviado no e-mail de notificacao do processo
 				// ---------------------------------------------------------
-				cPastaHTM    := 'PROCESSOS_COMPRAS'
+				cPastaHTM    := 'PROCESSOS_COMPRA'
 				oProcess:cTo := cPastaHTM
 	
 				// ---------------------------------------------------------
@@ -199,7 +199,7 @@ User Function WFSCSend(cNumPC)
 			    // Nova tarefa para envio do e-mail com
 			    // o link do processo:
 				// ---------------------------------------------------------
-				oProcess:NewTask('WFA040', '\WORKFLOW\PROCESSOS_COMPRAS\WFLinkSC.HTML')
+				oProcess:NewTask('WFA040', '\WORKFLOW\PROCESSOS_COMPRA\WFLinkSC.HTML')
 	
 				// ---------------------------------------------------------
 				// Atualiza os dados no HTML referente 
@@ -264,7 +264,7 @@ User Function WFSCRet(oProcess)
 	Local aRetSaldo := {}
 	Local nTotal    := 0
 	Local lLiberou  := .F.
-	Local cEmailUsu := AllTrim(UsrRetMail(__CUSERID))
+	Local cEmailUsu := AllTrim( UsrRetMail(RetCodUsr() ) )
 	Local cSubject 	:= 'Aprovacao de Solicitação de Compra'
 	Local aMensIncon := {}
 	
