@@ -15,22 +15,48 @@
 	@param Nome: C1_CODAPRO		
 	@param Tipo: C	
 	@param Tamanho: 6		
-	@param Titulo: Cod Aprovador  
+	@param Titulo: Cod Aprovador 
+	
+	@obs Necessario criar Campo C1_SPORTAL para ser gravado se a Sc de compra foi pelo portal ou não,
+	.T. para sim e .F. para não.
+	@param Nome: C1_SPORTAL	
+	@param Tipo: L	
+	@param Tamanho: 1		
+	@param Titulo: Sc Portal
+	
+	@obs Necessario criar Campo C1_WFENVIO para ser gravado se o WF foi enviado  ou não,
+	.T. para sim e .F. para não.
+	@param Nome: C1_WFENVIO	
+	@param Tipo: L	
+	@param Tamanho: 1		
+	@param Titulo: WF Envio	
+	
+	
+	@obs Necessario Criar tabela ZZA (Grupo de aprovação de sol. de compra)
+	@param ZZA_NUM  C 6		
+	@param ZZA_CODGRP C 6
+	@param ZZA_APROV C 6		
+	@param ZZA_USER C 6
+	@param ZZA_NIVEL C 2
+	@param ZZA_STATUS C 6
+	@param ZZA_DTLIB D
 
 	@link https://interno.totvs.com/mktfiles/tdiportais/helponlineprotheus/p12/portuguese/sigaworkflow_workflow_via_http_exemplo.htm 		
 /*/
 User Function COMRD003()
 
 	Local cSuperior := ""
-	Local cTotItem 	:= Strzero(Len(aCols),4)
+	//Local cTotItem 	:= Strzero(Len(aCols),4)
 	Local cNumSc 	:= SC1->C1_NUM
-	Local cStatus 	:= IIF(lAprov,"01","02") //Status = 01 aprovado | Status = 02 rejeitado
+	Local cStatus 	:= "01" //Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
 	Local cAliasSAL	:= ""
 	Local cAliasZZA := ""
 	Local cQuerySAL := ""
 	Local cQueryZZA := ""
 	Local aSAL 		:= {}
-	Local nSAL 	:= 0
+	Local nSAL 		:= 0
+	Local aZZA 		:= {}
+	Local nZZA 		:= 0
 
 	Private cDiasA
 	Private cDiasE
@@ -63,8 +89,8 @@ User Function COMRD003()
 	//Consulta grupo de aprovadores
 	cAliasSAL := GetNextAlias()
 	cQuerySAL := " SELECT AL_COD, AL_APROV, AL_USER, AL_NIVEL "
-	cQuerySAL := " FROM " + RetSqlName("SAL")  + " SAL "
-	cQuerySAL := " WHERE D_E_L_E_T_ <> '*' "
+	cQuerySAL += " FROM " + RetSqlName("SAL")  + " SAL "
+	cQuerySAL += " WHERE D_E_L_E_T_ <> '*' "
 	cQuerySAL := ChangeQuery(cQuerySAL)
 
 	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQuerySAL), cAliasSAL, .F., .T.)
@@ -72,34 +98,60 @@ User Function COMRD003()
 	//Array com grupo de aprovadores
 	While (cAliasSAL)->(!Eof())
 		AADD( aSAL,{ (cAliasTRB)->AL_COD,	;	//1 - Cód. grupo de aprovação
-					(cAliasTRB)->AL_APROV,	;	//2 - Cód. aporvador  
+					(cAliasTRB)->AL_APROV,	;	//2 - Cód. aprovador  
 					(cAliasTRB)->AL_USER,	;	//3 - Cód. usuário
 					(cAliasTRB)->AL_NIVEL} )  	//4 - Nível
 		(cAliasTRB)->(DbSkip())
 	EndDo
 
 	//Grava ZZA - Grupo de aprovação de SC
+	DbSelectArea("ZZA")
 	For nSAL := 1 To Len(aSAL)
-		DbSelectArea("ZZA")
-			RecLock("ZZA", .T.)
-				ZZA->ZZA_FILIAL 	:= xFilial("ZZA") 	//Filial
-				ZZA->ZZA_NUM    	:= cNumSc 			//Num Doc
-				ZZA->ZZA_CODGRP		:= aSAL[nSAL,1]		//Cod. Grupo Aprovação
-				ZZA->ZZA_APROV		:= aSAL[nSAL,2]		//Cod. Aprovador
-				ZZA->ZZA_USER   	:= aSAL[nSAL,3]		//Cod. Usuário
-				ZZA->ZZA_NIVEL  	:= aSAL[nSAL,4]		//Nível de aprovação
-				//ZZA->ZZA_STATUS	:= cStatus
-				//ZZA->ZZA_DTLIB 	:= Date()
-			MsUnLock() // Confirma e finaliza a operação
-		ZZA->(DbCloseArea())
+		RecLock("ZZA", .T.)
+			ZZA->ZZA_FILIAL 	:= xFilial("ZZA") 	//Filial
+			ZZA->ZZA_NUM    	:= cNumSc 			//Num Doc
+			ZZA->ZZA_CODGRP		:= aSAL[nSAL,1]		//Cod. Grupo Aprovação
+			ZZA->ZZA_APROV		:= aSAL[nSAL,2]		//Cod. Aprovador
+			ZZA->ZZA_USER   	:= aSAL[nSAL,3]		//Cod. Usuário
+			ZZA->ZZA_NIVEL  	:= aSAL[nSAL,4]		//Nível de aprovação
+			ZZA->ZZA_STATUS		:= cStatus			//Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
+			//ZZA->ZZA_DTLIB 	:= Date()			//Data da liberação
+		MsUnLock() // Confirma e finaliza a operação
 	Next nSAL
+	ZZA->(DbCloseArea())
+	
+	//Consulta grupo de aprovadores de sol. de compra ZZA
+	cAliasZZA := GetNextAlias()
+	cQueryZZA := " SELECT "
+	cQueryZZA += " * FROM " + RetSqlName("ZZA")  + " ZZA "
+	cQueryZZA += " WHERE D_E_L_E_T_ <> '*' "
+	cQueryZZA += " AND ZZA_NUM = " + cNumSc
+	cQueryZZA := ChangeQuery(cQueryZZA)
+	
+	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQueryZZA), cAliasZZA, .F., .T.)
+	
+	//Array aprovadores ZZA
+	While (cAliasSAL)->(!Eof())
+		AADD( aZZA,{ (cAliasZZA)->ZZA_NUM,		;	//1 - Num Doc
+					(cAliasZZA)->ZZA_CODGRP,	;	//2 - Cód. grupo aprovador  
+					(cAliasZZA)->ZZA_USER,		;	//3 - Cód. usuário
+					(cAliasZZA)->ZZA_NIVEL,		;  	//4 - Nível
+					(cAliasZZA)->ZZA_STATUS} )  	//5 - Status
+		(cAliasZZA)->(DbSkip())
+	EndDo
+	
+	For nZZA := 1 To Len(aZZA)
+		
+		cSuperior := aZZA[aZZA,3]
 
-	If ! Empty(cSuperior)
-		/*RecLock("SC1",.F.)
-			C1_CODAPRO := cSuperior
-		MsUnlock()*/
-		U_COMWF001(cSuperior)	
-	EndIf
+		If ! Empty(cSuperior)
+			/*RecLock("SC1",.F.)
+				C1_CODAPRO := cSuperior
+			MsUnlock()*/
+			U_COMWF001(cSuperior)	
+		EndIf
+		
+	Next nZZA
 Return
 
 /*/{Protheus.doc} COMWF001
