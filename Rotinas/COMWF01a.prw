@@ -16,15 +16,19 @@ Local cMvAtt := GetMv("MV_WFHTML")
 Local cNumSc	:= oProcess:oHtml:RetByName("cNUM")
 Local cSolicit	:= oProcess:oHtml:RetByName("cSOLICIT")
 Local cEmissao	:= oProcess:oHtml:RetByName("cEMISSAO")
+Local lAprov	:= oProcess:oHtml:RetByName("cAPROV") == 'L'
 Local cAprov	:= oProcess:oHtml:RetByName("cAPROV")
 Local cMotivo	:= oProcess:oHtml:RetByName("cMOTIVO")
 Local cCodSol	:= oProcess:oHtml:RetByName("cCODUSR")
 Local cMailSol 	:= UsrRetMail(cCodSol)
+Local cQuery 	:= ""
 
 Private oHtml
 
 ConOut("Aprovando SC: "+cNumSc)
 
+
+//Faz liberação se for aprovado
 cQuery := " UPDATE " + RetSqlName("SC1")
 cQuery += " SET C1_APROV = '"+cAprov+"'"
 cQuery += " WHERE C1_NUM = '"+cNumSc+"'"

@@ -144,6 +144,7 @@ User Function WFSCSend(cNumPC)
 				oProcess:oHtml:ValByName('cNumPed'		, SC1->C1_NUM)
 				oProcess:oHtml:ValByName('dEmissao'		, SC1->C1_EMISSAO)
 				oProcess:oHtml:ValByName('cCodAprov'	, SCR->CR_USER)
+				oProcess:oHtml:ValByName('cCodSolic'	, RetCodUsr())
 		
 				While !SC1->(Eof()) .And.; 
 						SC1->(C1_FILIAL+C1_NUM) == xFilial('SC1')+cNumPC
@@ -264,7 +265,7 @@ User Function WFSCRet(oProcess)
 	Local aRetSaldo := {}
 	Local nTotal    := 0
 	Local lLiberou  := .F.
-	Local cEmailUsu := AllTrim( UsrRetMail(RetCodUsr() ) )
+	Local cEmailUsu := ""
 	Local cSubject 	:= 'Aprovacao de Solicitação de Compra'
 	Local aMensIncon := {}
 	
@@ -276,11 +277,12 @@ User Function WFSCRet(oProcess)
 	// Obtem os dados do formulario HTML para
 	// tratamento do retorno:
 	// -----------------------------------------------
-	cNumPC     := oProcess:oHtml:RetByName('cNumPed')
-	cNumSCR    := PadR(oProcess:oHtml:RetByName('cNumPed'),Len(SCR->CR_NUM))
-	cObserv    := oProcess:oHtml:RetByName('cObsApr')
-	cCodAprov  := oProcess:oHtml:RetByName('cCodAprov')
-	lAprovado  := oProcess:oHtml:RetByName('Aprovacao') == 'S'
+	cNumPC    := oProcess:oHtml:RetByName('cNumPed')
+	cNumSCR   := PadR(oProcess:oHtml:RetByName('cNumPed'),Len(SCR->CR_NUM))
+	cObserv   := oProcess:oHtml:RetByName('cObsApr')
+	cCodAprov := oProcess:oHtml:RetByName('cCodAprov')
+	lAprovado := oProcess:oHtml:RetByName('Aprovacao') == 'S'
+	cEmailUsu := AllTrim( UsrRetMail(oProcess:oHtml:RetByName('cCodSolic') ) )
 	
 	// -----------------------------------------------
 	// Posiciona no Documento de Alcada
@@ -381,7 +383,7 @@ User Function WFSCRet(oProcess)
 									SC1->C1_FILIAL+SC1->C1_NUM == xFilial("SC1")+PadR(SCR->CR_NUM,Len(SC1->C1_NUM))
 	
 								Reclock("SC1",.F.)
-								SC1->C1_CONAPRO := "L" //-- Atualiza o status (Liberado) no Pedido de Compra
+								SC1->C1_APROV := "L" //-- Atualiza o status (Liberado) na Solicitação de Compra
 								SC1->(MsUnlock())
 	
 								// ---------------------------------------------------------
@@ -393,25 +395,29 @@ User Function WFSCRet(oProcess)
 	
 							SC1->(DbSetOrder(1))
 							SC1->(DbSeek(xFilial("SC1")+cNumPC))
+
+							//Verifica se foi liberado 
+							If SCR->CR_STATUS == '03'
 							
-							//--Monta mensagem para notificação
-							aAdd(aMensIncon,'Status da liberação de solicitação de compra:')
-    						aAdd(aMensIncon,'')
-      						aAdd(aMensIncon,'Aprovado.')
-							aAdd(aMensIncon,'')
-							aAdd(aMensIncon,'Solicitação Nº: '+cNumPC+'.')
+								//--Monta mensagem para notificação
+								aAdd(aMensIncon,'Status da liberação de solicitação de compra:')
+								aAdd(aMensIncon,'')
+								aAdd(aMensIncon,'APROVADO.')
+								aAdd(aMensIncon,'')
+								aAdd(aMensIncon,'Solicitação Nº: '+cNumPC+'.')
 
 
-							Notifica(cEmailUsu, cSubject, aMensIncon )
-	
+								Notifica(cEmailUsu, cSubject, aMensIncon )
+							
+							EndIf
 						Else
 							If SCR->CR_STATUS == '04'	//-- Se Rejeitado
-								Conout('O pedido em questao foi rejeitado!')
+								Conout('A solicitação em questao foi rejeitado!')
 								
 								//--Monta mensagem para notificação
 								aAdd(aMensIncon,'Status da liberação de solicitação de compra:')
 								aAdd(aMensIncon,'')
-								aAdd(aMensIncon,'Rejeitado.')
+								aAdd(aMensIncon,'REJEITADO.')
 								aAdd(aMensIncon,'')
 								aAdd(aMensIncon,'Solicitação Nº: '+cNumPC+'.')
 
