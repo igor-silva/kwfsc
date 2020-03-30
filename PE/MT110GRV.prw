@@ -2,7 +2,7 @@
 #include 'parmtype.ch'
 
 //====================================================================================================================\\
-/*/{Protheus.doc} COMRD003
+/*/{Protheus.doc} MT110GRV
   ======================================================================================================================
 	@description
 	Ponto de entrada apos gravação da SC. 
@@ -16,8 +16,7 @@
 //====================================================================================================================\\
 User Function MT110GRV()
 
-	Local aArea	:= GetArea()
-	Local lRet 	:= .T.
+	Local aArea		:= GetArea()
 
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//	Envia Workflow para aprovacao da Solicitacao de Compras
@@ -38,7 +37,7 @@ User Function MT110GRV()
 	
 	RestArea(aArea)
 
-Return lRet
+Return
 // FIM da Funcao MT110GRV
 //======================================================================================================================
 
@@ -90,9 +89,7 @@ Return lRet
 User Function COMRD003()
 
 	Local aArea		:= GetArea()
-	Local aAreaSX6	:= GetArea()
-	Local cSuperior := ""
-	Local cTotItem 	:= Strzero(Len(aCols),4)
+	//Local cTotItem 	:= Strzero(Len(aCols),4)
 	Local cNumSc 	:= SC1->C1_NUM
 	Local cStatus 	:= "01" //Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
 	Local cAliasSAL	:= ""
@@ -103,25 +100,6 @@ User Function COMRD003()
 	Private cDiasA 	:= ""
 	Private cDiasE	:= ""
 	//Private cPerg := Padr("COMRD3",10)
-
-	//***********************************************
-	//	Verifica a Existencia de Parametro MV__TIMESC
-	//	Caso nao exista. Cria o parametro.
-	//***********************************************
-	DbSelectArea("SX6")
-	If ! dbSeek("  "+"MV__TIMESC")
-		RecLock("SX6",.T.)
-		X6_VAR    	:= "MV__TIMESC"
-		X6_TIPO 	:= "C"
-		X6_CONTEUD 	:= "0305"
-		X6_CONTENG 	:= "0305"
-		X6_CONTSPA 	:= "0305"
-		X6_DESCRIC	:= "DEFINE TEMPO EM DIAS DE TIMEOUT DA APROVACAO DE SO"
-		X6_DESC1	:= "LICITACAO DE COMPRAS - EX: AVISO EM 3 DIAS E EXCLU"
-		X6_DESC2	:= "SAO EM 5 DIAS = 0305                              "
-		MsUnlock("SX6")
-	EndIf
-	SX6->(DbCloseArea())
 
 	//cDiasA := SubStr(GetMv("MV__TIMESC"),1,2) //TIMEOUT Dias para Avisar Aprovador
 	//cDiasE := SubStr(GetMv("MV__TIMESC"),3,2) //TIMEOUT Dias para Excluir a Solicitacao
@@ -146,7 +124,7 @@ User Function COMRD003()
 		(cAliasSAL)->(DbSkip())
 	EndDo
 
-	//Grava ZZA - Grupo de aprovação de SC
+	//Grava ZZA - Grupo de aprovação de SC para controlar o envio do WorkFlow por nível e status
 	For nSAL := 1 To Len(aSAL)
 		If RecLock("ZZA", .T.)
 			ZZA->ZZA_FILIAL 	:= FWxFilial('ZZA')
@@ -156,15 +134,20 @@ User Function COMRD003()
 			ZZA->ZZA_USER   	:= AllTrim( aSAL[nSAL,3] )		//Cod. Usuário
 			ZZA->ZZA_NIVEL  	:= AllTrim( aSAL[nSAL,4] )		//Nível de aprovação
 			ZZA->ZZA_STATUS		:= AllTrim( cStatus )			//Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
-			//ZZA->ZZA_DTLIB 		:= " "				//Data da liberação
+			//ZZA->ZZA_DTLIB 		:= " "						//Data da liberação
 			ZZA->(MsUnLock()) // Confirma e finaliza a operação
 		Else
-			MsgStop("Não foi possível travar o registro para manipulação!", "Atenção")
+			Conout("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+			Conout("RecLock ZZA -> Não foi possível travar o registro para manipulação!")
+			Conout("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 		EndIf
 	Next nSAL
 
+	If !Empty(cNumSc)
+		U_COMWF001( cNumSc )	//Função que envia o WorkFlow
+	EndIf
+
 	RestArea(aArea)
-	RestArea(aAreaSX6)
 Return
 // FIM da Funcao COMRD003
 //======================================================================================================================
@@ -185,123 +168,168 @@ Return
 	@type function
 /*/
 //======================================================================================================================
-User Function COMWF001(cAprov)
+User Function COMWF001(cNumSC)
 
+	Local aArea 	:= GetArea()
+	Local cNumDoc 	:= AllTrim(cNumSC)
 	Local cMvAtt 	:= GetMv("MV_WFHTML")
-	Local cMailSup 	:= UsrRetMail(cAprov)
+	Local cMailApr 	:= ""
+	Local cCodAprov := ""
 	Local cMailId	:= ""							//ID do processo gerado.
 	Local cHostWF	:= "http://localhost:91/wf"		//URL configurado no ini para WF Link.
-
+	Local cQuery 	:= ""
+	Local cAliasZZA := ""
+	Local cQueryZZA := ""
+	Local aZZA 		:= {}
+	Local nZZA 		:= 0
 	Local oHtml
-
-	cQuery := " SELECT C1_NUM, C1_EMISSAO, C1_SOLICIT, C1_ITEM, C1_PRODUTO, C1_DESCRI, C1_UM, C1_QUANT, C1_DATPRF, C1_OBS, C1_CC, C1_CODAPRO, C1_USER"
-	cQuery += " FROM " + RetSqlName("SC1")
-	cQuery += " WHERE C1_NUM = '"+SC1->C1_NUM+"'"
-
-	MemoWrit("COMWF001.sql",cQuery)
-	dbUseArea(.T.,"TOPCONN", TCGenQry(,,cQuery),"TRB", .F., .T.)
-
-	TcSetField("TRB","C1_EMISSAO","D")
-	TcSetField("TRB","C1_DATPRF","D")
-
-	COUNT TO nRec
-
-	//CASO TENHA DADOS
-	If nRec > 0
-		dbSelectArea("TRB")
-		dbGoTop()
-
-		cNumSc		:= TRB->C1_NUM
-		cSolicit	:= TRB->C1_SOLICIT
-		dDtEmissao	:= DTOC(TRB->C1_EMISSAO)
-
-		//*****************************************************
-		//	Muda o parametro para enviar no corpo do e-mail
-		//*****************************************************
-		PutMv("MV_WFHTML","T")
-
-		oProcess := TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
-		oProcess:NewTask('Inicio',"\workflow\koala\COMWF001.htm")
-		oHtml   := oProcess:oHtml
-
-		oHtml:ValByName("diasA"			, cDiasA)
-		oHtml:ValByName("diasE"			, cDiasE)
-		oHtml:ValByName("cNUM"			, TRB->C1_NUM)
-		oHtml:ValByName("cEMISSAO"		, DTOC(TRB->C1_EMISSAO))
-		oHtml:ValByName("cSOLICIT"		, TRB->C1_SOLICIT)
-		oHtml:ValByName("cCODUSR"		, TRB->C1_USER)
-		oHtml:ValByName("cAPROV"		, "")
-		oHtml:ValByName("cMOTIVO"		, "")
-		oHtml:ValByName("it.ITEM"		, {})
-		oHtml:ValByName("it.PRODUTO"	, {})
-		oHtml:ValByName("it.DESCRI"		, {})
-		oHtml:ValByName("it.UM"			, {})
-		oHtml:ValByName("it.QUANT"		, {})
-		oHtml:ValByName("it.DATPRF"		, {})
-		oHtml:ValByName("it.OBS"		, {})
-		oHtml:ValByName("it.CC"			, {})
-
-		dbSelectArea("TRB")
-		dbGoTop()
-
-		While !EOF()
-			aadd(oHtml:ValByName("it.ITEM")       ,TRB->C1_ITEM			) //Item Cotacao
-			aadd(oHtml:ValByName("it.PRODUTO")    ,TRB->C1_PRODUTO		) //Cod Produto
-			aadd(oHtml:ValByName("it.DESCRI")     ,TRB->C1_DESCRI		) //Descricao Produto
-			aadd(oHtml:ValByName("it.UM")         ,TRB->C1_UM			) //Unidade Medida
-			aadd(oHtml:ValByName("it.QUANT")      ,TRANSFORM( TRB->C1_QUANT,'@E 999,999.99' )) //Quantidade Solicitada
-			aadd(oHtml:ValByName("it.DATPRF")     ,DTOC(TRB->C1_DATPRF)) //Data da Necessidade
-			aadd(oHtml:ValByName("it.OBS")        ,TRB->C1_OBS			) //Observacao
-			aadd(oHtml:ValByName("it.CC")         ,TRB->C1_CC			) //Centro de Custo
-			dbSkip()
-		EndDo
-
-		//envia o e-mail
-		cUser 				:= Subs(cUsuario,7,15)
-		oProcess:ClientName(cUser)
-		oProcess:cTo    	:= "koala"
-		oProcess:cSubject  	:= "E-mail para aprovação de SC - "+cNumSc+" - De: "+cSolicit
-		oProcess:bReturn  	:= "U_COMWF01a()"
-
-		//**********************************************************************//
-		// Função a ser executada quando expirar o tempo do TimeOut.			//
-		// Tempos limite de espera das respostas, em dias, horas e minutos.		//
-		//**********************************************************************//
-		//oProcess:bTimeOut := {{"U_COMWF01b()", Val(cDiasA) , 0, 0 },{"U_COMWF01c()", Val(cDiasE) , 0, 0 }}
-		oProcess:bTimeOut := {{"U_COMWF01b()", 0 , 0, 3 },{"U_COMWF01c()", 0 , 0, 6 }}
-
-		cMailID := oProcess:Start()
-
-		PutMv("MV_WFHTML",cMvAtt)
+	
 
 
-		//*********************************************************
-		//	Inicia o processo de enviar link no corpo do e-mail
-		//*********************************************************
+	//Consulta grupo de aprovadores de sol. de compra ZZA
+	cAliasZZA := GetNextAlias()
+	cQueryZZA := " SELECT "
+	cQueryZZA += " * FROM " + RetSqlName("ZZA")  + " ZZA "
+	cQueryZZA += " WHERE D_E_L_E_T_ <> '*' "
+	cQueryZZA += " AND ZZA_NUM = " + cNumDoc
+	cQueryZZA := ChangeQuery(cQueryZZA)
 
-		oProcess:NewTask('000005', '\workflow\koala\COMWFLINK001.HTM')  //Inicio uma nova Task com um HTML Simples
-		oProcess:oHtml:ValByName('proc_link',cHostWF+'/workflow/messenger/'+'/emp'+ cEmpAnt + '/koala/' + cMailId + '.HTM' )
+	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQueryZZA), cAliasZZA, .F., .T.)
 
-		oHtml:ValByName("cNumSc"			, cNumSc)
-		oHtml:ValByName("cSolicitante"		, cSolicit)
-		oHtml:ValByName("dDtEmissao"		, dDtEmissao)
+	//Array aprovadores ZZA 
+	While (cAliasZZA)->(!Eof())
+		If (cAliasZZA)->ZZA_STATUS $ '01'
+			AADD( aZZA,{ (cAliasZZA)->ZZA_NUM,	;	//1 - Num Doc
+			(cAliasZZA)->ZZA_CODGRP,			;	//2 - Cód. grupo aprovador
+			(cAliasZZA)->ZZA_APROV,				;	//3 - Cód. aprovador
+			(cAliasZZA)->ZZA_USER,				;	//4 - Cód. usuário
+			(cAliasZZA)->ZZA_NIVEL,				;  	//5 - Nível
+			(cAliasZZA)->ZZA_STATUS} )  			//6 - Status
+			(cAliasZZA)->(DbSkip())
+		EndIf
+	EndDo
+		
+	For nZZA := 1 To Len(aZZA)
+		//DbGoTo()
+		cDocto := aZZA[nZZA, 1]
+		PswOrder(1)
+		If PswSeek(aZZA[nZZA, 4]) .And. !Empty(PswRet()[1,14])
+			cMailApr := AllTrim(PswRet()[1,14])
+			cCodAprov := aZZA[nZZA, 3]
 
-		oProcess:cTo    	:= cMailSup //E-mail do aprovador
-		oProcess:cBCC     	:= "igor-d-silva@hotmail.com" //Cópia
-		oProcess:cSubject  	:= "Aprovação de SC - "+cNumSc+" - De: "+cSolicit
+			//Consulta registros da Solicitação de compra na tabela SC1
+			cQuery := " SELECT C1_NUM, C1_EMISSAO, C1_SOLICIT, C1_ITEM, C1_PRODUTO, C1_DESCRI, C1_UM, C1_QUANT, C1_DATPRF, C1_OBS, C1_CC, C1_CODAPRO, C1_USER"
+			cQuery += " FROM " + RetSqlName("SC1")
+			cQuery += " WHERE C1_NUM = '"+cNumDoc+"'"
 
-		oProcess:Start()
-		oProcess:Free()
-		oProcess:= Nil
+			MemoWrit("COMWF001.sql",cQuery)
+			dbUseArea(.T.,"TOPCONN", TCGenQry(,,cQuery),"TRB", .F., .T.)
 
-		TRB->(dbCloseArea())
+			TcSetField("TRB","C1_EMISSAO","D")
+			TcSetField("TRB","C1_DATPRF","D")
 
-	Else
+			COUNT TO nRec
 
-		TRB->(dbCloseArea())
-		MsgStop("Problemas no Envio do E-Mail de Aprovação!","ATENÇÃO!")
+			//CASO TENHA DADOS
+			If nRec > 0
 
-	EndIf
+				dbSelectArea("TRB")
+				dbGoTop()
+				cSolicit	:= TRB->C1_SOLICIT
+				dDtEmissao	:= DTOC(TRB->C1_EMISSAO)
+
+				//*****************************************************
+				//	Muda o parametro para enviar no corpo do e-mail
+				//*****************************************************
+				PutMv("MV_WFHTML","T")
+
+				oProcess := TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
+				oProcess:NewTask('Inicio',"\workflow\koala\COMWF001.htm")
+				oHtml   := oProcess:oHtml
+
+				oHtml:ValByName("diasA"			, cDiasA)
+				oHtml:ValByName("diasE"			, cDiasE)
+				oHtml:ValByName("cNUM"			, TRB->C1_NUM)
+				oHtml:ValByName("cEMISSAO"		, DTOC(TRB->C1_EMISSAO))
+				oHtml:ValByName("cSOLICIT"		, TRB->C1_SOLICIT)
+				oHtml:ValByName("cCODUSR"		, TRB->C1_USER)
+				oHtml:ValByName("cAPROV"		, "")
+				oHtml:ValByName("cMOTIVO"		, "")
+				oHtml:ValByName("it.ITEM"		, {})
+				oHtml:ValByName("it.PRODUTO"	, {})
+				oHtml:ValByName("it.DESCRI"		, {})
+				oHtml:ValByName("it.UM"			, {})
+				oHtml:ValByName("it.QUANT"		, {})
+				oHtml:ValByName("it.DATPRF"		, {})
+				oHtml:ValByName("it.OBS"		, {})
+				oHtml:ValByName("it.CC"			, {})
+
+				dbSelectArea("TRB")
+				dbGoTop()
+
+				While !EOF()
+					aadd(oHtml:ValByName("it.ITEM")       ,TRB->C1_ITEM			) //Item Cotacao
+					aadd(oHtml:ValByName("it.PRODUTO")    ,TRB->C1_PRODUTO		) //Cod Produto
+					aadd(oHtml:ValByName("it.DESCRI")     ,TRB->C1_DESCRI		) //Descricao Produto
+					aadd(oHtml:ValByName("it.UM")         ,TRB->C1_UM			) //Unidade Medida
+					aadd(oHtml:ValByName("it.QUANT")      ,TRANSFORM( TRB->C1_QUANT,'@E 999,999.99' )) //Quantidade Solicitada
+					aadd(oHtml:ValByName("it.DATPRF")     ,DTOC(TRB->C1_DATPRF)) //Data da Necessidade
+					aadd(oHtml:ValByName("it.OBS")        ,TRB->C1_OBS			) //Observacao
+					aadd(oHtml:ValByName("it.CC")         ,TRB->C1_CC			) //Centro de Custo
+					dbSkip()
+				EndDo
+
+				//envia o e-mail
+				cUser 				:= Subs(cUsuario,7,15)
+				oProcess:ClientName(cUser)
+				oProcess:cTo    	:= "koala"
+				oProcess:cSubject  	:= "E-mail para aprovação de SC - "+cNumDoc+" - De: "+cSolicit
+				oProcess:bReturn  	:= "U_COMWF01a()"
+
+				//**********************************************************************//
+				// Função a ser executada quando expirar o tempo do TimeOut.			//
+				// Tempos limite de espera das respostas, em dias, horas e minutos.		//
+				//**********************************************************************//
+				//oProcess:bTimeOut := {{"U_COMWF01b()", Val(cDiasA) , 0, 0 },{"U_COMWF01c()", Val(cDiasE) , 0, 0 }}
+				oProcess:bTimeOut := {{"U_COMWF01b()", 0 , 0, 3 },{"U_COMWF01c()", 0 , 0, 6 }}
+
+				cMailID := oProcess:Start()
+
+				PutMv("MV_WFHTML",cMvAtt)
+
+
+				//*********************************************************
+				//	Inicia o processo de enviar link no corpo do e-mail
+				//*********************************************************
+
+				oProcess:NewTask('000005', '\workflow\koala\COMWFLINK001.HTM')  //Inicio uma nova Task com um HTML Simples
+				oProcess:oHtml:ValByName('proc_link',cHostWF+'/workflow/messenger/'+'/emp'+ cEmpAnt + '/koala/' + cMailId + '.HTM' )
+
+				oHtml:ValByName("cNumSc"			, cNumDoc)
+				oHtml:ValByName("cSolicitante"		, cSolicit)
+				oHtml:ValByName("cCodAprov"		, cCodAprov)
+				oHtml:ValByName("dDtEmissao"		, dDtEmissao)
+
+				oProcess:cTo    	:= cMailApr //E-mail do aprovador
+				oProcess:cBCC     	:= "" //Cópia
+				oProcess:cSubject  	:= "Aprovação de SC - "+cNumDoc+" - De: "+cSolicit
+
+				oProcess:Start()
+				oProcess:Free()
+				oProcess:= Nil
+
+				TRB->(dbCloseArea())
+			Else
+				TRB->(dbCloseArea())
+				
+				Conout("++++++++++++++++++++++++++++++++++++++++++++++")
+				Conout("Problemas no Envio do E-Mail de Aprovação!")
+				Conout("++++++++++++++++++++++++++++++++++++++++++++++")
+			EndIf
+		EndIf	
+	Next nZZA
+
+	RestArea(aArea)
 
 Return
 // FIM da Funcao COMWF001
@@ -332,80 +360,15 @@ User Function COMWF01a(oProcess)
 	Local cAprov	:= oProcess:oHtml:RetByName("cAPROV")
 	Local cMotivo	:= oProcess:oHtml:RetByName("cMOTIVO")
 	Local cCodSol	:= oProcess:oHtml:RetByName("cCODUSR")
+	Local cCodAprov := oProcess:oHtml:RetByName("cCodAprov")
 	Local cMailSol 	:= UsrRetMail(cCodSol)
-	Local cAliasZZA := ""
 	Local cQuery 	:= ""
-	Local cQueryZZA := ""
-	Local aZZA 		:= {}
-	Local nZZA 		:= 0
 	Local lContinua := .T.
-	Local lLiberou  := .F.
 
 	Private oHtml
 
 	ConOut("Aprovando SC: "+cNumSc)
 
-	//Consulta grupo de aprovadores de sol. de compra ZZA
-	cAliasZZA := GetNextAlias()
-	cQueryZZA := " SELECT "
-	cQueryZZA += " * FROM " + RetSqlName("ZZA")  + " ZZA "
-	cQueryZZA += " WHERE D_E_L_E_T_ <> '*' "
-	cQueryZZA += " AND ZZA_NUM = " + cNumSc
-	cQueryZZA := ChangeQuery(cQueryZZA)
-
-	DbUseArea(.T., "TOPCONN", TCGenQry(,,cQueryZZA), cAliasZZA, .F., .T.)
-
-	//Array aprovadores ZZA
-	While (cAliasZZA)->(!Eof())
-		AADD( aZZA,{ (cAliasZZA)->ZZA_NUM,		;	//1 - Num Doc
-		(cAliasZZA)->ZZA_CODGRP,	;	//2 - Cód. grupo aprovador
-		(cAliasZZA)->ZZA_USER,		;	//3 - Cód. usuário
-		(cAliasZZA)->ZZA_NIVEL,		;  	//4 - Nível
-		(cAliasZZA)->ZZA_STATUS} )  	//5 - Status
-		(cAliasZZA)->(DbSkip())
-	EndDo
-
-	/*For nZZA := 1 To Len(aZZA)
-		cSuperior := aZZA[nZZA,3]
-
-	If ! Empty(cSuperior) .And. aZZA[nZZA,4] == "01"
-			//RecLock("SC1",.F.)
-			//	C1_CODAPRO := cSuperior
-			//MsUnlock()
-			U_COMWF001(cAprov)	
-	EndIf
-		
-Next nZZA*/
-
-
-	// -----------------------------------------------
-	// Avalia o Status do Documento a ser liberado
-	// -----------------------------------------------
-If lContinua .And. !Empty((cAliasZZA)->ZZA_DTLIB) .And. (cAliasZZA)->ZZA_STATUS $ '02'
-		Conout('Este pedido ja foi liberado anteriormente. Somente os pedidos que estao aguardando liberacao poderao ser liberados.')
-		lContinua := .F.
-
-ElseIf lContinua .And. (cAliasZZA)->ZZA_STATUS $ '01'
-		Conout('Esta operação não poderá ser realizada pois este registro se encontra bloqueado pelo sistema (aguardando outros niveis)')
-		lContinua := .F.
-
-EndIf
-
-If !Empty((cAliasZZA)->ZZA_DTLIB) .And. (cAliasZZA)->ZZA_STATUS $ '02'
-
-		//Faz liberação se for aprovado
-		cQuery := " UPDATE " + RetSqlName("SC1")
-		cQuery += " SET C1_APROV = '"+cAprov+"'"
-		cQuery += " WHERE C1_NUM = '"+cNumSc+"'"
-
-		MemoWrit("COMWF01a.sql",cQuery)
-		TcSqlExec(cQuery)
-		TCREFRESH(RetSqlName("SC1"))
-Else
-
-		U_COMWF001(cAprov)	
-
-EndIf
 
 	//RastreiaWF( ID do Processo, Codigo do Processo, Codigo do Status, Descricao Especifica, Usuario )
 	RastreiaWF(oProcess:fProcessID+'.'+oProcess:fTaskID,"000004",'1002',"RETORNO DE WORKFLOW PARA APROVACAO DE SC",cUsername)
@@ -420,27 +383,28 @@ EndIf
 	PutMv("MV_WFHTML","T")
 
 	oProcess:=TWFProcess():New("000004","WORKFLOW PARA APROVACAO DE SC")
-If cAprov == "L" //Verifica se foi aprovado
+	If cAprov == "L" //Verifica se foi aprovado
 		DbSelectArea("ZZA")
 		DbSetOrder(2)
-	If DbSeek(xFilial("ZZA")+cAprov)
+		If DbSeek(xFilial("ZZA")+cCodAprov)
 			RecLock("ZZA", .F.)
-				ZZA->ZZA_STATUS		:= "02"			//Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
-				ZZA->ZZA_DTLIB 	:= Date()			//Data da liberação
-			MsUnLock() // Confirma e finaliza a operação
-	EndIf
+				ZZA->ZZA_STATUS	:= "02"			//Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
+				ZZA->ZZA_DTLIB 	:= Date()		//Data da liberação
+			ZZA->(MsUnLock()) 					// Confirma e finaliza a operação
+		EndIf
 		oProcess:NewTask('Inicio',"\workflow\koala\COMWF005.htm")
-ElseIf cAprov == "R" //Verifica se foi rejeitado
+	ElseIf cAprov == "R" //Verifica se foi rejeitado
 		DbSelectArea("ZZA")
 		DbSetOrder(2)
-	If DbSeek(xFilial("ZZA")+cAprov)
+		If DbSeek(xFilial("ZZA")+cCodAprov)
 			RecLock("ZZA", .F.)
-				ZZA->ZZA_STATUS		:= "03"			//Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
-				ZZA->ZZA_DTLIB 	:= Date()			//Data da liberação
-			MsUnLock() // Confirma e finaliza a operação
-	EndIf
+				ZZA->ZZA_STATUS	:= "03"			//Status = 01 aguardando aprovação | 02 aprovado | 03 rejeitado
+				ZZA->ZZA_DTLIB	:= Date()		//Data da liberação
+			ZZA->(MsUnLock()) 					// Confirma e finaliza a operação
+		EndIf
 		oProcess:NewTask('Inicio',"\workflow\koala\COMWF006.htm")
-EndIf
+	EndIf
+	
 	oHtml   := oProcess:oHtml
 
 	oHtml:valbyname("Num"		, cNumSc)
